@@ -61,7 +61,8 @@ def hough_space_n_lines(image, n,
     plot_hough_lines(original_image, image, accumulator, rhos, thetas)
     
     hough_acc_peaks = hough_peaks(accumulator, n)
-    lines_list = hough_lines_transofrm(hough_acc_peaks, rhos, thetas)
+    hough_peaks_val = accumulator[hough_acc_peaks]
+    lines_list = hough_lines_transofrm(hough_peaks_val, rhos, thetas)
     
     return lines_list, accumulator
     
@@ -121,7 +122,7 @@ def hough_peaks(accumulator, n):
     any noise so carefully denoise image before
     applying Hough Space transformation
     '''
-    indices =  np.argpartition(accumulator.flatten(), -2)[-n:]
+    indices =  np.argpartition(accumulator.flatten(), -n)[-n:]
     return np.vstack(np.unravel_index(indices, accumulator.shape)).T   
 
 def plot_hough_lines(image, trans_image, accumulator, rhos, thetas):
@@ -158,15 +159,8 @@ def hough_lines_transofrm(indicies, rhos, thetas):
         theta = thetas[indicies[i][1]]
         a = np.cos(theta)
         b = np.sin(theta)
-        x0 = a*rho
-        y0 = b*rho
-        # These are then scaled so that the lines go off the edges of the image
-        x1 = int(x0 + 1000*(-b))
-        y1 = int(y0 + 1000*(a))
-        x2 = int(x0 - 1000*(-b))
-        y2 = int(y0 - 1000*(a))
         
-        line = [x1, y1, x2, y2]
+        line = (a, b)
         lines.append(line)
     
     return lines
