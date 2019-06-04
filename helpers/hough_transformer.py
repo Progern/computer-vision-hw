@@ -10,7 +10,7 @@ from feature_detection_helper import *
 def hough_space_n_lines(image, n, 
                         smooth = False, kernel_size = 3, 
                         non_max_suppression = False,
-                        double_thr_lower = 0.3, double_thr_upper = 0.4):
+                        double_thr_lower = 0.7, double_thr_upper = 0.75):
     
     '''
     Gets and input image as numpy array and the number
@@ -41,6 +41,8 @@ def hough_space_n_lines(image, n,
     # Find the gradients of the image
     print("Calculating gradients of the image...")
     grad_matrix, theta_matrix = sobel_filters(image)
+    y, x = grad_matrix.shape
+    grad_matrix = grad_matrix[10:x - 10, 10:y-10]
     
     # Apply max suppression algorithm for filtering unnecessary pixels
     if(non_max_suppression):
@@ -52,16 +54,22 @@ def hough_space_n_lines(image, n,
     threshold_image, weak_pixels, strong_pixels = double_threshold(grad_matrix, double_thr_lower, double_thr_upper)
     
     print("Applying Hysteresys algorithm")
-    image = hysteresis(threshold_image, weak_pixels, strong_pixels)
+    hysteresis_img = hysteresis(threshold_image, weak_pixels, strong_pixels)
         
     print("Calculating the Hough Space accumulator...")
-    accumulator, rhos, thetas = hough_lines_acc(image)
+    accumulator, rhos, thetas = hough_lines_acc(hysteresis_img)
     
     # Plot the Hough Space lines
-    plot_hough_lines(original_image, image, accumulator, rhos, thetas)
+    plot_hough_lines(original_image, hysteresis_img, accumulator, rhos, thetas)
     
     hough_acc_peaks = hough_peaks(accumulator, n)
     lines_list = hough_lines_transofrm(hough_acc_peaks, rhos, thetas, n)
+    
+    y, x = original_image.shape
+    original_image = original_image[10:x - 10, 10:y-10]
+
+
+    plot_lines(original_image, lines_list)
     
     return lines_list, accumulator
     
@@ -164,6 +172,7 @@ def hough_lines_transofrm(indicies, rhos, thetas, n):
     of lines. Each lines is in format of x1,y2,x2,y2.
     '''
     lines = []
+    i = 0
     
     for i in range(n):
         rho = rhos[indicies[i][0]]
@@ -184,9 +193,31 @@ def hough_lines_transofrm(indicies, rhos, thetas, n):
         line_cartesian = {'a': a, 'b': b}
         line_coords = {'x1':x1, 'y1':y1, 'x2':x2, 'y2':y2}
         
-        lines.append((line_cartesian, line_coords))
+        if(not is_similar(lines, line_cartesian)):
+            lines.append((line_cartesian, line_coords))
+            
     
     return lines
+
+
+def is_similar(lines, line_candidate, threshold = 0.1):
+    '''
+    Calculates the similarity between lines
+    to remove nearby lines
+    
+    lines is the array of tuple line values
+    line_candidate should be dictionary of type {a: x, b: y}
+    '''
+    
+    is_similar = False
+
+    
+    for line in lines:
+        line_value = line[0]
+        
+        is_similar = (line_value['a'] - line_candidate['a'] <= threshold) and (line_value['b'] - line_candidate['b'] <= threshold)
+                                
+    return is_similar
 
 
 def plot_lines(img, lines):
@@ -196,8 +227,6 @@ def plot_lines(img, lines):
     for line in lines:
         coords = line[1]
         cv2.line(img, (coords['x1'], coords['y1']), (coords['x2'], coords['y2']), (0, 255, 0), 2)
-        
-    cv2.imshow('Hough lines',img)  
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-        
+   
+    plt.title("Most prominent lines")
+    plt.imshow(img, cmap = 'gray')
