@@ -97,7 +97,7 @@ def hough_lines_acc(img, angle_step=1, value_threshold=5):
     hypot = int(np.hypot(width, height))
     
     # Rho and Theta arrays
-    thetas = np.deg2rad(np.arange(0, np.pi, angle_step))
+    thetas = np.deg2rad(np.arange(-90.0, 90.0, angle_step))
     rhos = np.linspace(-hypot, hypot, hypot * 2)
 
     cos_t = np.cos(thetas)
@@ -106,7 +106,7 @@ def hough_lines_acc(img, angle_step=1, value_threshold=5):
     num_thetas = len(thetas)
     num_rhos = len(rhos)
 
-    accumulator = np.zeros((2 * hypot, num_thetas), dtype=np.uint16)
+    accumulator = np.zeros((2 * hypot, num_thetas), dtype=np.uint8)
                 
     edges = img > value_threshold 
     y_id, x_id = np.nonzero(edges)
