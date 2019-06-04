@@ -66,7 +66,7 @@ def hough_space_n_lines(image, n,
     return lines_list, accumulator
     
 
-def hough_lines_acc(image):
+def hough_lines_acc(img, angle_step=1, value_threshold=5):
     '''
     Takes an input image as numpy 2d-array
     angle_step is the step between angles of thetas (-90, +90)
@@ -78,39 +78,51 @@ def hough_lines_acc(image):
     thetas - array of angles computed
     '''
     
-    # Rho range and Theta range creation
+    """
+    Hough transform for lines
+    Input:
+    img - 2D binary image with nonzeros representing edges
+    angle_step - Spacing between angles to use every n-th angle
+                 between -90 and 90 degrees. Default step is 1.
+    lines_are_white - boolean indicating whether lines to be detected are white
+    value_threshold - Pixel values above or below the value_threshold are edges
+    Returns:
+    accumulator - 2D array of the hough transform accumulator
+    theta - array of angles used in computation, in radians.
+    rhos - array of rho values. Max size is 2 times the diagonal
+           distance of the input image.
+    """
     
-    height, width = image.shape  
-    diagonal = np.ceil(np.sqrt(height ** 2 + width ** 2))  
+    width, height = img.shape
+    hypot = int(np.hypot(width, height))
     
-    rhos = np.arange(-diagonal, diagonal + 1, 1)
-    thetas = np.deg2rad(np.arange(-90, 90, 1))
-    
-    # Calculate the sinus and cosinus of theta values
-    # Will produce a numpy array for corresponding cos and sin
-    
-    sines = np.sin(thetas)
-    cosines = np.cos(thetas)
+    # Rho and Theta arrays
+    thetas = np.deg2rad(np.arange(0, np.pi, angle_step))
+    rhos = np.linspace(-hypot, hypot, hypot * 2)
 
-    # Create Hough accumulator
-    H = np.zeros((len(rhos), len(thetas)), dtype=np.uint64)
+    cos_t = np.cos(thetas)
+    sin_t = np.sin(thetas)
+                
+    num_thetas = len(thetas)
+    num_rhos = len(rhos)
 
-    # We are interested only in non-zero values
-    
-    points = np.argwhere(image != 0)
-    sincos = np.stack((sines, cosines))
-
-    rhos_mat = (points @ sincos + diagonal).astype(np.int32)
+    accumulator = np.zeros((2 * hypot, num_thetas), dtype=np.uint16)
+                
+    edges = img > value_threshold 
+    y_id, x_id = np.nonzero(edges)
 
     # Accumulator voting
-    
-    for theta_index in range(len(thetas)):
-        H[:, theta_index] = np.bincount(rhos_mat[:, theta_index], minlength=H.shape[0])
+    for i in range(len(x_id)):
+        x = x_id[i]
+        y = y_id[i]
 
-    return H, rhos, thetas
+        for t_idx in range(num_thetas):
+            rho = int(round(x * cos_t[t_idx] + y * sin_t[t_idx])) + hypot
+                
+            # Add one vote for prominent line
+            accumulator[rho, t_idx] += 1
 
-
-    # Method to visualize hough lines
+    return accumulator, rhos, thetas
 
 
 def hough_peaks(accumulator, n):
@@ -158,11 +170,34 @@ def hough_lines_transofrm(indicies, rhos, thetas, n):
         theta = thetas[indicies[i][1]]
         a = np.cos(theta)
         b = np.sin(theta)
+        
         x0 = a*rho
         y0 = b*rho
         
-        line_cartesian = {'a': a, 'b': b}
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*a)
         
-        lines.append(line_cartesian)
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
+        
+        
+        line_cartesian = {'a': a, 'b': b}
+        line_coords = {'x1':x1, 'y1':y1, 'x2':x2, 'y2':y2}
+        
+        lines.append((line_cartesian, line_coords))
     
     return lines
+
+
+def plot_lines(img, lines):
+    '''
+    Inspired by OpenCV Python docs
+    '''
+    for line in lines:
+        coords = line[1]
+        cv2.line(img, (coords['x1'], coords['y1']), (coords['x2'], coords['y2']), (0, 255, 0), 2)
+        
+    cv2.imshow('Hough lines',img)  
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+        
