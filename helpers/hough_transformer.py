@@ -61,8 +61,7 @@ def hough_space_n_lines(image, n,
     plot_hough_lines(original_image, image, accumulator, rhos, thetas)
     
     hough_acc_peaks = hough_peaks(accumulator, n)
-    hough_peaks_val = accumulator[hough_acc_peaks]
-    lines_list = hough_lines_transofrm(hough_peaks_val, rhos, thetas)
+    lines_list = hough_lines_transofrm(hough_acc_peaks, rhos, thetas, n)
     
     return lines_list, accumulator
     
@@ -122,7 +121,7 @@ def hough_peaks(accumulator, n):
     any noise so carefully denoise image before
     applying Hough Space transformation
     '''
-    indices =  np.argpartition(accumulator.flatten(), -n)[-n:]
+    indices =  np.argpartition(accumulator.flatten(), -2)[-n:]
     return np.vstack(np.unravel_index(indices, accumulator.shape)).T   
 
 def plot_hough_lines(image, trans_image, accumulator, rhos, thetas):
@@ -146,7 +145,7 @@ def plot_hough_lines(image, trans_image, accumulator, rhos, thetas):
     plt.show()
 
 
-def hough_lines_transofrm(indicies, rhos, thetas):
+def hough_lines_transofrm(indicies, rhos, thetas, n):
     '''
     Takes the indicies of most prominent lines
     rhos and thetas from hough_space function and returns the list
@@ -154,13 +153,16 @@ def hough_lines_transofrm(indicies, rhos, thetas):
     '''
     lines = []
     
-    for i in range(len(indicies)):
+    for i in range(n):
         rho = rhos[indicies[i][0]]
         theta = thetas[indicies[i][1]]
         a = np.cos(theta)
         b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
         
-        line = (a, b)
-        lines.append(line)
+        line_cartesian = {'a': a, 'b': b}
+        
+        lines.append(line_cartesian)
     
     return lines
