@@ -3,8 +3,10 @@ from feature_detection_helper import *
 
 """
 Helper script for performing FAST corner detection
-and BRIEFT description.
+and BRIEF descriptor.
 """
+
+# FAST
 
     # Helper methods
 
@@ -231,3 +233,83 @@ def fast_detection(image, threshold = 50):
     non_max_suppression(image, corners, bresenham_circle)
     
     return corners
+
+# BRIEF
+
+def compute_binary_vector(image, keypoint, n, patch_size, seed):
+    '''
+    Computes BRIEF binary vector for one keypoint.
+    image - image matrix 
+    keypoint - tuple of (x,y) coordinates
+    n - size of output vector
+    patch_size - size of patch square around keypoint 
+    
+    Returns vector of size n containing binary values.
+    '''
+    np.random.seed(seed)
+    
+    # Create empty array for storing binary values
+    output_arr = np.zeros(n, dtype = np.int8)
+    
+    # Compute value of diagonal, assuming keypoint is in the middle of the patch
+    x, y = keypoint
+    diagonal = patch_size / 2
+    
+    # We need to check if the keypoint patch is in the bounds of the image
+    x_max, y_max = image.shape
+    
+    # Check if our keypoint is not too near to the right edge 
+    if((x - diagonal < 0) or (y - diagonal < 0) or (x + diagonal > x_max) or (y + diagonal > y_max)):
+        return None
+    
+    # Coordinates of patch square   
+    x0 = int(x - diagonal)
+    y0 = int(y - diagonal)
+    x1 = int(x + diagonal)
+    y1 = int(y + diagonal)
+    
+    # Extract patch from image
+    patch = image[x0:x1, y0:y1]
+        
+    for i in range(n):
+        # Get intensity of keypoint
+        Ip = image[x, y]
+        
+        # Get random uniform value for point in patch
+        x_rand = int(np.random.uniform(low = x0, high = x1))
+        y_rand = int(np.random.uniform(low = y0, high = y1))
+        
+        # Get intensity of random point
+        Ir = image[x_rand, y_rand]
+        
+        if(Ip < Ir):
+            output_arr[i] = 1
+    
+    return output_arr
+
+
+def compute_descriptors(image, key_points, n = 128, patch_size = 32, seed = 10):
+    '''
+    Computes descriptor for each of the key points and
+    
+    image - image matrix
+    key_points - array of key points calculated by some algorithm, for ex. FAST or SIFT
+    n - size of descriptor vector
+    patch_size - size of surrounding patch for each key point
+    seed - random seed for numpy uniform probability distribution
+    
+    returns list of descriptor vectors
+    '''
+    
+    descriptors = []
+    
+    for key_point in key_points:
+        x, y = key_point[0], key_point[1]
+        key_point_descriptor = compute_binary_vector(image, (x,y), n, patch_size, seed)
+        
+        # Check if key point was not rejected
+        if(key_point_descriptor is not None):
+            descriptors.append(key_point_descriptor)
+
+    return descriptors
+
