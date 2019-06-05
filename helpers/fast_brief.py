@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from feature_detection_helper import *
 
 """
 Helper script for performing FAST corner detection
@@ -214,7 +215,8 @@ def fast_detection(image, threshold = 50):
     x0, y0 = int(num_rows * 0.05), int(num_rows * 0.95)
     x1, y1 = int(num_cols * 0.05), int(num_cols * 0.95)
     
-    image = median_kernel_blur(image, x0, y0, x1, y1)
+    gauss_kernel = gaussian_kernel(3)
+    image = convolve_kernel(image, gauss_kernel)
     
     for row in range(x0, y0):
         for col in range(x1, y1):
