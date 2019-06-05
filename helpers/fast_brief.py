@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from feature_detection_helper import *
+import cv2
 
 """
 Helper script for performing FAST corner detection
@@ -312,4 +313,28 @@ def compute_descriptors(image, key_points, n = 128, patch_size = 32, seed = 10):
             descriptors.append(key_point_descriptor)
 
     return descriptors
+
+def detect_corners_on_image(image, threshold):
+    corners = fast_detection(image, threshold = threshold)
+    descriptors = compute_descriptors(image, corners)
+    
+    return np.asarray(corners, np.float32), np.asarray(descriptors, np.float32)
+
+def match_brute_force(descr_arr0, descr_arr1):
+    bf = cv2.BFMatcher()
+    
+    # Return two best matches for keypoints
+    matches = bf.knnMatch(descr_arr0, descr_arr1, 2)
+
+    matches_arr = []
+    for match_a, match_b in matches:
+        # Mark match good if 2nd match has bigger distance
+        # (filtering similar keypoints)
+        if match_a.distance < 0.75 * match_b.distance:
+            matches_arr.append((
+                match_a.queryIdx,
+                match_a.trainIdx
+            ))
+
+    return matches_arr
 
