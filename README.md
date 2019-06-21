@@ -2,3 +2,7 @@
 
 - Home Work 1.1 - [Interactive IPython Notebook](https://github.com/Progern/computer-vision-hw/blob/master/cv-1-1/cv-hw-1-1.ipynb)
 - Home Work 1.2 - [Interactive IPython Notebook](https://github.com/Progern/computer-vision-hw/blob/master/cv-1-2/cv-hw-1-2.ipynb)
+
+- Home Work 2.1 - [Test separation](https://github.com/Progern/computer-vision-hw/blob/master/cv-2-0/cv-hw-2-0-text-separation.ipynb)
+- Home Work 2.2 - [Object counting](https://github.com/Progern/computer-vision-hw/blob/master/cv-2-0/cv-hw-2-1-object-count.ipynb)
+- Home Work 2.3 - [Background subtraction/Object segmentation](https://github.com/Progern/computer-vision-hw/blob/master/cv-2-0/cv-hw-2-2-object-separation.ipynb)
