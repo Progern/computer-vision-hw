@@ -14,4 +14,4 @@
 
 - Home Work 3.1 - [Mean Shift]()
 - Home Work 3.2 - [Lucas-Kanade Tracking]()
-- Home Work 3.3 - [Content=Based Image Retrieval](https://github.com/Progern/computer-vision-hw/blob/master/cv-3-0/cv-3-3-content-based.ipynb)
+- Home Work 3.3 - [Content-Based Image Retrieval](https://github.com/Progern/computer-vision-hw/blob/master/cv-3-0/cv-3-3-content-based.ipynb)
