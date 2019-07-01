@@ -24,6 +24,10 @@ def template_match_ssd(image, patch):
     
     # Create matrix to store SSD between patch and sub-matrices of the image
     ssd_scores = np.zeros((h - k_h, w - k_w))
+
+    # Convert matrices to arrays
+    image = np.array(image, dtype="float")
+    patch = np.array(patch, dtype="float")
     
     # Iterate over the image and calculate SSD
     
@@ -85,6 +89,39 @@ def template_match_ncc(image, patch):
 
 # SAD
 
+def template_match_sad(image, patch):
+    """
+    Performs template matching usind Sum of Absolute Differences
+    
+    Input:
+    image - numpy (w, h) matrix of grayscaled image
+    patch - numpy (k_w, k_h) matrix of grayscaled image patch
+    
+    Output:
+    tuple of (p1, p0) of most prominent points of the matched patch
+    """
+        
+    # Get the dimensions of the image and the patch
+    h, w = image.shape
+    k_h, k_w = patch.shape
+
+    # Convert matrices to arrays
+    image = np.array(image, dtype="float")
+    patch = np.array(patch, dtype="float")
+    
+    # Create matrix to store SSD between patch and sub-matrices of the image
+    ssd_scores = np.zeros((h - k_h, w - k_w))
+
+    for i in range(0, h - k_h):
+        for j in range(0, w - k_w):
+            score = np.abs(image[i:i + k_h, j:j + k_w] - patch)
+            ssd_scores[i, j] = score.sum()
+
+    # Find the minimum points
+    min_points = np.unravel_index(ssd_scores.argmin(), ssd_scores.shape)
+    
+    return (min_points[1], min_points[0]) 
+    
 
 # General method 
 
@@ -118,7 +155,7 @@ def perform_template_matching(image_path, patch_path, method = 'ssd'):
     elif(method == 'ncc'):
         points = template_match_ncc(full_image_gray, patch_image)
     elif(method == 'sad'):
-        points = template_match_ncc(full_image_gray, patch_image)
+        points = template_match_sad(full_image_gray, patch_image)
     else:
         raise ValueError("Unknown template matching method. Supported methods: ssd, ncc, sad")
     
