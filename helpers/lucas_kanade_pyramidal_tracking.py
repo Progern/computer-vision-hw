@@ -13,6 +13,7 @@ class LucasKanadePyramidalObjectTracker:
         self.windowSize = lk_window_size
         self.pyramidalLevel = maxPyramidalLevel
         self.video_file_name = video_file_name
+        self.selection_mode = True
 
         # Setup constants for OpenCV
         self.windowName = "Pyramidal Lucas-Kanade tracking."
@@ -38,17 +39,20 @@ class LucasKanadePyramidalObjectTracker:
             c_x, c_y = (self.boxes[0][0] + self.boxes[1][0])/2, (self.boxes[0][1] + self.boxes[1][1])/2
             # Set old points 
             self.old_points = np.array([[c_x, c_y]], dtype=np.float32)
+            self.selection_mode = False
+            self.start_detection()
 
-    def start_detection(self):
+    def init_detection(self):
         # Create video capture
         if(self.video_file_name == None):
             # Capture video from webcam
-            cap = cv2.VideoCapture("img/%04d.jpg")
+            cap = cv2.VideoCapture(0)
         else:
             cap = cv2.VideoCapture(self.video_file_name)
-        
-        cap.set(cv2.CAP_PROP_FPS , 3)
-        # Set initial old frame
+
+        self.cap = cap
+
+        # Read first frame
         _, frame = cap.read()
         self.old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -57,10 +61,22 @@ class LucasKanadePyramidalObjectTracker:
         cv2.resizeWindow(self.windowName, 640, 480)
         cv2.setMouseCallback(self.windowName, self.rectangle_select_callback)
 
+        while(self.selection_mode):
+            cv2.imshow(self.windowName, frame)
+            cv2.startWindowThread()
+
+            key = cv2.waitKey(45)
+
+            if key == 27:
+                break
+        
+
+
+    def start_detection(self):
         # Loop over video frames
         while True:
             # Get the new frame
-            _, frame = cap.read()
+            _, frame = self.cap.read()
             self.gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             if self.box_selected is True:
@@ -101,7 +117,7 @@ class LucasKanadePyramidalObjectTracker:
             cv2.imshow(self.windowName, frame)
             cv2.startWindowThread()
 
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(45)
 
             if key == 27:
                 break
@@ -118,4 +134,4 @@ if __name__ == '__main__':
         video_file_name = None
 
     helper = LucasKanadePyramidalObjectTracker(video_file_name)
-    helper.start_detection()
+    helper.init_detection()
