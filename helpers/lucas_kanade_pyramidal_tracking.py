@@ -11,6 +11,8 @@ class LucasKanadePyramidalObjectTracker:
         self.box_selected = False
         self.old_points = np.array([[]])
         self.boxes = []
+        self.windowSize = lk_window_size
+        self.pyramidalLevel = maxPyramidalLevel
 
         # Setup constants for OpenCV
         self.windowName = "Pyramidal Lucas-Kanade tracking."
@@ -43,6 +45,11 @@ class LucasKanadePyramidalObjectTracker:
         elif event == cv2.EVENT_LBUTTONUP:
             self.boxes.append((x, y))
             self.box_selected = True
+            # Calculate the relative center of rectangle
+            c_x, c_y = (self.boxes[0][0] + self.boxes[1][0])/2, (self.boxes[0][1] + self.boxes[1][1])/2
+            # Set old points 
+            self.old_points = np.array([[c_x, c_y]], dtype=np.float32)
+            print("Old points: ", self.old_points)
 
     def start_detection(self):
         # Create video capture
@@ -69,7 +76,7 @@ class LucasKanadePyramidalObjectTracker:
 
                 # Get the position of new point using Lukas-Kanade tracking method
                 new_points, status, error = cv2.calcOpticalFlowPyrLK(self.old_gray, self.gray_frame,
-                                                                     self.old_points, None)
+                                                                     self.old_points, None, **self.lukas_kanade_params)
 
                 # Update old points
                 self.old_gray = self.gray_frame.copy()
@@ -82,6 +89,36 @@ class LucasKanadePyramidalObjectTracker:
             if self.box_selected is True:
                 # Draw a selected rectangle on the image
                 cv2.rectangle(frame, self.boxes[0], self.boxes[1], (255, 0, 0), 2)
+
+                # Define the region of interest
+                roi = frame[self.boxes[-2][1]:self.boxes[-1][1], self.boxes[-2][0]:self.boxes[-1][0]]
+
+                # Update new window shape
+                self.windowSize = roi.shape[0:2]
+
+                # Update parameters of Lucas-Kanade method with new window size
+                self.lukas_kanade_params = {"winSize":  self.windowSize, "maxLevel": self.pyramidalLevel,
+                                    "criteria": (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)}
+                
+                # Get the position of new point using Lukas-Kanade tracking method
+                new_points, status, error = cv2.calcOpticalFlowPyrLK(self.old_gray, self.gray_frame,
+                                                                     self.old_points, None, **self.lukas_kanade_params)
+
+                # Update old points
+                self.old_gray = self.gray_frame.copy()
+                self.old_points = new_points
+
+                # Calculate new corner points for rectangle
+                half_window_w = self.windowSize[0] / 2
+                half_window_h =  self.windowSize[1] / 2
+
+                old_points_unraveled = self.old_points[0]
+
+                upper_corner = (int(self.old_points[0][0] - half_window_h), int(self.old_points[0][1] - half_window_w))
+                lower_corner = (int(self.old_points[0][0] + half_window_h), int(self.old_points[0][1] + half_window_w))
+
+                cv2.rectangle(frame, upper_corner, lower_corner, (0, 255, 0), 2)
+
 
 
             cv2.imshow(self.windowName, frame)
