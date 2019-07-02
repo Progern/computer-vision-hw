@@ -8,10 +8,12 @@ class LucasKanadePyramidalObjectTracker:
         # Setup initial point state
         self.point = ()
         self.point_selected = False
+        self.box_selected = False
         self.old_points = np.array([[]])
+        self.boxes = []
 
         # Setup constants for OpenCV
-        self.windowName = "Classical Lucas-Kanade tracking."
+        self.windowName = "Pyramidal Lucas-Kanade tracking."
 
         # The maxLevel describes maximal pyramid level number. If set to 1 - two pyramids are used and so on
         self.lukas_kanade_params = {"winSize": lk_window_size, "maxLevel": maxPyramidalLevel,
@@ -28,6 +30,20 @@ class LucasKanadePyramidalObjectTracker:
             self.point_selected = True
             self.old_points = np.array([[x, y]], dtype=np.float32)
 
+    def rectangle_select_callback(self, event, x, y, flags, params):
+        """
+        Updates the state of drawed rectangle
+        """
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # Clear the state of the boxes
+            self.boxes = []
+            self.box_selected = False
+            self.boxes.append((x, y))
+
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.boxes.append((x, y))
+            self.box_selected = True
+
     def start_detection(self):
         # Create video capture
         cap = cv2.VideoCapture(0)
@@ -38,8 +54,8 @@ class LucasKanadePyramidalObjectTracker:
 
         # Set callback for window mouse click
         cv2.namedWindow(self.windowName, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(self.windowName, 800, 800)
-        cv2.setMouseCallback(self.windowName, self.point_select_callback)
+        cv2.resizeWindow(self.windowName, 640, 480)
+        cv2.setMouseCallback(self.windowName, self.rectangle_select_callback)
 
         # Loop over video frames
         while True:
@@ -62,6 +78,10 @@ class LucasKanadePyramidalObjectTracker:
                 # Draw new object position
                 x, y = new_points.ravel()
                 cv2.circle(frame, (x, y), 10, (0, 255, 0), -1)
+
+            if self.box_selected is True:
+                # Draw a selected rectangle on the image
+                cv2.rectangle(frame, self.boxes[0], self.boxes[1], (255, 0, 0), 2)
 
 
             cv2.imshow(self.windowName, frame)
