@@ -1,18 +1,18 @@
 import numpy as np
 import cv2
+import sys
 
 
 class LucasKanadePyramidalObjectTracker:
 
-    def __init__(self, lk_window_size = (15, 15), maxPyramidalLevel = 2):
+    def __init__(self, video_file_name = None, lk_window_size = (15, 15), maxPyramidalLevel = 2):
         # Setup initial point state
-        self.point = ()
-        self.point_selected = False
         self.box_selected = False
         self.old_points = np.array([[]])
         self.boxes = []
         self.windowSize = lk_window_size
         self.pyramidalLevel = maxPyramidalLevel
+        self.video_file_name = video_file_name
 
         # Setup constants for OpenCV
         self.windowName = "Pyramidal Lucas-Kanade tracking."
@@ -20,17 +20,6 @@ class LucasKanadePyramidalObjectTracker:
         # The maxLevel describes maximal pyramid level number. If set to 1 - two pyramids are used and so on
         self.lukas_kanade_params = {"winSize": lk_window_size, "maxLevel": maxPyramidalLevel,
                                     "criteria": (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)}
-
-    def point_select_callback(self, event, x, y, flags, params):
-        """
-        Updates the current selected point state from OpenCV Window callback
-        """
-
-        # Left button clicked - new tracking point selected
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.point = (x, y)
-            self.point_selected = True
-            self.old_points = np.array([[x, y]], dtype=np.float32)
 
     def rectangle_select_callback(self, event, x, y, flags, params):
         """
@@ -49,12 +38,16 @@ class LucasKanadePyramidalObjectTracker:
             c_x, c_y = (self.boxes[0][0] + self.boxes[1][0])/2, (self.boxes[0][1] + self.boxes[1][1])/2
             # Set old points 
             self.old_points = np.array([[c_x, c_y]], dtype=np.float32)
-            print("Old points: ", self.old_points)
 
     def start_detection(self):
         # Create video capture
-        cap = cv2.VideoCapture(0)
-
+        if(self.video_file_name == None):
+            # Capture video from webcam
+            cap = cv2.VideoCapture("img/%04d.jpg")
+        else:
+            cap = cv2.VideoCapture(self.video_file_name)
+        
+        cap.set(cv2.CAP_PROP_FPS , 3)
         # Set initial old frame
         _, frame = cap.read()
         self.old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -69,22 +62,6 @@ class LucasKanadePyramidalObjectTracker:
             # Get the new frame
             _, frame = cap.read()
             self.gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-            if self.point_selected is True:
-                # Draw a circle at initial selected position
-                cv2.circle(frame, self.point, 10, (0, 0, 255), 2)
-
-                # Get the position of new point using Lukas-Kanade tracking method
-                new_points, status, error = cv2.calcOpticalFlowPyrLK(self.old_gray, self.gray_frame,
-                                                                     self.old_points, None, **self.lukas_kanade_params)
-
-                # Update old points
-                self.old_gray = self.gray_frame.copy()
-                self.old_points = new_points
-
-                # Draw new object position
-                x, y = new_points.ravel()
-                cv2.circle(frame, (x, y), 10, (0, 255, 0), -1)
 
             if self.box_selected is True:
                 # Draw a selected rectangle on the image
@@ -134,5 +111,11 @@ class LucasKanadePyramidalObjectTracker:
 
 
 if __name__ == '__main__':
-    helper = LucasKanadePyramidalObjectTracker()
+    # Get the name of video file name
+    if(len(sys.argv) > 1):
+        video_file_name = sys.argv[1]
+    else:
+        video_file_name = None
+
+    helper = LucasKanadePyramidalObjectTracker(video_file_name)
     helper.start_detection()
