@@ -42,6 +42,12 @@ class LucasKanadePyramidalObjectTracker:
             self.selection_mode = False
             self.start_detection()
 
+    def normalize_frame(self, frame):
+        frameNormalized = np.zeros(frame.shape)
+        frameNormalized = cv2.normalize(frame,  frameNormalized, 0, 255, cv2.NORM_MINMAX)
+
+        return frameNormalized
+
     def init_detection(self):
         # Create video capture
         if(self.video_file_name == None):
@@ -53,8 +59,9 @@ class LucasKanadePyramidalObjectTracker:
         self.cap = cap
 
         # Read first frame
-        _, frame = cap.read()
+        ret, frame = cap.read()
         self.old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        self.old_gray = self.normalize_frame(self.old_gray)
 
         # Set callback for window mouse click
         cv2.namedWindow(self.windowName, cv2.WINDOW_NORMAL)
@@ -65,7 +72,10 @@ class LucasKanadePyramidalObjectTracker:
             cv2.imshow(self.windowName, frame)
             cv2.startWindowThread()
 
-            key = cv2.waitKey(45)
+            if ret is not True:
+                break
+
+            key = cv2.waitKey(50)
 
             if key == 27:
                 break
@@ -78,10 +88,9 @@ class LucasKanadePyramidalObjectTracker:
             # Get the new frame
             _, frame = self.cap.read()
             self.gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            self.gray_frame = self.normalize_frame(self.gray_frame)
 
             if self.box_selected is True:
-                # Draw a selected rectangle on the image
-                cv2.rectangle(frame, self.boxes[0], self.boxes[1], (255, 0, 0), 2)
 
                 # Define the region of interest
                 roi = frame[self.boxes[-2][1]:self.boxes[-1][1], self.boxes[-2][0]:self.boxes[-1][0]]
