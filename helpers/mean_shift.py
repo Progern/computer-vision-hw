@@ -9,6 +9,8 @@ class MeanShiftTracker:
         self.window_name = "Mean-Shift tracking algorithm"
         self.selection_mode = True
         self.box_selected = False
+        self.roi_selected = False
+        self.term_criteria = (cv2.TERM_CRITERIA_EPS or cv2.TERM_CRITERIA_COUNT, 10, 1)
         self.init_detection()
 
     
@@ -47,6 +49,7 @@ class MeanShiftTracker:
             # Clear the state of the boxes
             self.boxes = []
             self.box_selected = False
+            self.roi_selected = False
             self.boxes.append((x, y))
 
         elif event == cv2.EVENT_LBUTTONUP:
@@ -74,7 +77,32 @@ class MeanShiftTracker:
                 # Draw a selected rectangle on the image
                 cv2.rectangle(frame, self.boxes[0], self.boxes[1], (255, 0, 0), 2)
 
+                if not self.roi_selected:
+                    # Define the region of interest
+                    self.roi = frame[self.boxes[-2][1]:self.boxes[-1][1], self.boxes[-2][0]:self.boxes[-1][0]]
+                    self.roi_selected = True
+
+                    # Convert to HSV in order to process by mean-shift
+                    self.roi_hsv = cv2.cvtColor(self.roi, cv2.COLOR_BGR2HSV)
+                    # Get HSV histogram only from the hue
+                    self.roi_hist = cv2.calcHist([self.roi_hsv], [0], None, [180], [0, 180])
+                    # Normalize the histogram
+                    self.roi_hist = cv2.normalize(self.roi_hist, self.roi_hist, 0, 255, cv2.NORM_MINMAX)
+
+
+            # Convert frame to hsv
+            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            # Calculate the mask for mean-shift algorithm
+            mask = cv2.calcBackProject([frame_hsv], [0], self.roi_hist, [0, 180], 1)
+
+            _, window = cv2.meanShift(mask, (self.boxes[0][0], self.boxes[0][1], self.roi.shape[0], self.roi.shape[1]), self.term_criteria)
+            
+
+            x, y, w, h = window
+            cv2.rectangle(frame, (x, y), (x + h, y + w), (0, 255, 0), 2)
+
             cv2.imshow(self.window_name, frame)
+            cv2.imshow("Mask", mask)
 
             if key == 27:
                 break
