@@ -3,11 +3,11 @@ import numpy as np
 import sys
 
 
-class MeanShiftTracker:
+class CamShiftTracker:
 
     def __init__(self, video_source, iteration=10, points=1):
         self.video_source = video_source
-        self.window_name = "Mean-Shift tracking algorithm"
+        self.window_name = "Cam-Shift tracking algorithm"
         self.selection_mode = True
         self.box_selected = False
         self.roi_selected = False
@@ -54,7 +54,7 @@ class MeanShiftTracker:
         elif event == cv2.EVENT_LBUTTONUP:
             self.boxes.append((x, y))
             self.box_selected = True
-            # Set old points 
+            # Set old points
             self.selection_mode = False
             self.start_detection()
 
@@ -84,19 +84,21 @@ class MeanShiftTracker:
                     self.roi_hsv = cv2.cvtColor(self.roi, cv2.COLOR_BGR2HSV)
                     # Get HSV histogram only from the hue
                     self.roi_hist = cv2.calcHist([self.roi_hsv], [0], None, [180], [0, 180])
-                    # Normalize the histogram
-                    self.roi_hist = cv2.normalize(self.roi_hist, self.roi_hist, 0, 255, cv2.NORM_MINMAX)
 
             # Convert frame to hsv
             frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            # Calculate the mask for mean-shift algorithm
+            # Calculate the mask
             mask = cv2.calcBackProject([frame_hsv], [0], self.roi_hist, [0, 180], 1)
 
-            _, window = cv2.meanShift(mask, (self.boxes[0][0], self.boxes[0][1], self.roi.shape[0], self.roi.shape[1]),
-                                      self.term_criteria)
+            # Calculate the window
+            ret, window = cv2.CamShift(mask, (self.boxes[0][0], self.boxes[0][1], self.roi.shape[0], self.roi.shape[1]),
+                                     self.term_criteria)
 
-            x, y, w, h = window
-            cv2.rectangle(frame, (x, y), (x + h, y + w), (0, 255, 0), 2)
+            # Convert to points
+            print(ret)
+            points = cv2.boxPoints(ret)
+            points = np.int0(points)
+            cv2.polylines(frame, [points], True, (0, 255, 0), 2)
 
             cv2.imshow(self.window_name, frame)
 
@@ -114,4 +116,4 @@ if __name__ == '__main__':
     else:
         video_file_name = None
 
-    mean_shift_tracker = MeanShiftTracker(video_file_name)
+    mean_shift_tracker = CamShiftTracker(video_file_name)
