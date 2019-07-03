@@ -4,13 +4,13 @@ import sys
 
 class MeanShiftTracker:
 
-    def __init__(self, video_source):
+    def __init__(self, video_source, iteration = 10, points = 1):
         self.video_source = video_source
         self.window_name = "Mean-Shift tracking algorithm"
         self.selection_mode = True
         self.box_selected = False
         self.roi_selected = False
-        self.term_criteria = (cv2.TERM_CRITERIA_EPS or cv2.TERM_CRITERIA_COUNT, 10, 1)
+        self.term_criteria = (cv2.TERM_CRITERIA_EPS or cv2.TERM_CRITERIA_COUNT, iteration, points)
         self.init_detection()
 
     
