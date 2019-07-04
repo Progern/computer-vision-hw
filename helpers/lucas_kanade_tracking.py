@@ -15,7 +15,7 @@ class LucasKanadeObjectTracker:
         self.selection_mode = True
 
         # Setup constants for OpenCV
-        self.windowName = "Pyramidal Lucas-Kanade tracking."
+        self.windowName = "Classical Lucas-Kanade tracking."
 
         # The maxLevel describes maximal pyramid level number. If set to 1 - two pyramids are used and so on
         self.lukas_kanade_params = {"winSize": lk_window_size, "maxLevel": 0,

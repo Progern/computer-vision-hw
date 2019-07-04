@@ -95,7 +95,6 @@ class CamShiftTracker:
                                      self.term_criteria)
 
             # Convert to points
-            print(ret)
             points = cv2.boxPoints(ret)
             points = np.int0(points)
             cv2.polylines(frame, [points], True, (0, 255, 0), 2)
