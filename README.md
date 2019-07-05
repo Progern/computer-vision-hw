@@ -12,4 +12,6 @@
 
 -----
 
-- Home Work 3 - [Repository folder](https://github.com/Progern/computer-vision-hw/tree/master/cv-3-0)
+- Home Work 3.1 - [Mean-Shift and Cam-Shift](https://github.com/Progern/computer-vision-hw/blob/master/cv-3-0/cv-3-1-mean-cam-shift.ipynb)
+- Home Work 3.2 - [Lucas-Kanade tracking method](https://github.com/Progern/computer-vision-hw/blob/master/cv-3-0/cv-3-2-lucas-kanade-method.ipynb)
+- Home Work 3.3 - [Content-based image retrieval](https://github.com/Progern/computer-vision-hw/blob/master/cv-3-0/cv-3-3-content-based.ipynb)
