@@ -35,7 +35,6 @@ class TemplateMatcher:
             self.boxes.append((x, y))
 
         elif event == cv2.EVENT_LBUTTONUP:
-            print("Box selected")
             self.boxes.append((x, y))
             self.box_selected = True
             # Calculate the relative center of rectangle
@@ -70,7 +69,6 @@ class TemplateMatcher:
         
         # Get the dimensions of the image and the patch
         h, w = image.shape
-        print("Image shape ", image.shape)
         k_h, k_w = patch.shape
         
         # Create matrix to store SSD between patch and sub-matrices of the image
@@ -79,9 +77,9 @@ class TemplateMatcher:
         # Convert matrices to arrays
         image = np.array(image, dtype="float")
         patch = np.array(patch, dtype="float")
+
         
         # Iterate over the image and calculate SSD
-        
         for i in range(0, h - k_h):
             for j in range(0, w - k_w):
                 score = (image[i:i + k_h, j:j + k_w] - patch)**2
@@ -196,18 +194,14 @@ class TemplateMatcher:
         
         # Dimensions of the image would be used for drawing a rectangle
         patch_image_gray = cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY)
-        print("Patch shape ", patch.shape)
         h, w = patch_image_gray.shape
         
         # Perform matching
         if(self.method == 'ssd'):
-            print("Using SSD method")
             points = self.template_match_ssd(full_image_gray, patch_image_gray)
         elif(self.method == 'ncc'):
-            print("Using NCC method")
             points = self.template_match_ncc(full_image_gray, patch_image_gray)
         elif(self.method == 'sad'):
-            print("Using SAD method")
             points = self.template_match_sad(full_image_gray, patch_image_gray)
         else:
             raise ValueError("Unknown template matching method. Supported methods: ssd, ncc, sad")
@@ -261,20 +255,16 @@ class TemplateMatcher:
         while True:
             # Get the new frame
             _, frame = self.cap.read()
-            print("Next frame read")
 
             if self.box_selected is True:
                 # Draw a selected rectangle on the image
                 cv2.rectangle(frame, self.boxes[0], self.boxes[1], (255, 0, 0), 2)
                 # Define the region of interest
                 self.roi = frame[self.boxes[-2][1]:self.boxes[-1][1], self.boxes[-2][0]:self.boxes[-1][0]]
-                print("Roi selected with shape ", self.roi.shape)
 
             
-            print("Performing template matching...")
             # Perform template-matching 
             frame = self.perform_template_matching(frame, self.roi)
-            print("Template matching performed.")
 
             cv2.imshow(self.windowName, frame)
             cv2.startWindowThread()
@@ -294,7 +284,7 @@ if __name__ == '__main__':
         method = sys.argv[2]
     else:
         video_file_name = None
-        method = 'ssd'
+        method = 'ncc'
 
     helper = TemplateMatcher(video_file_name, method)
     helper.init_detection()
