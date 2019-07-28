@@ -19,5 +19,5 @@
 -----
 
 - Home Work 4.1 - [Six-point ellipse search using Singular Value Decomposition](https://github.com/Progern/computer-vision-hw/blob/master/cv-4-0/cv-4-1-ellipse.ipynb)
-- Home Work 4.2 [Camera distortion callibartion](https://github.com/Progern/computer-vision-hw/blob/master/cv-4-0/cv-4-2-camera-distortion-callibration.ipynb)
-- Home Work 4.3 [Epipolar Geometry](https://github.com/Progern/computer-vision-hw/blob/master/cv-4-0/cv-4-3-epipolar-lines.ipynb)
+- Home Work 4.2 - [Camera distortion callibartion](https://github.com/Progern/computer-vision-hw/blob/master/cv-4-0/cv-4-2-camera-distortion-callibration.ipynb)
+- Home Work 4.3 - [Epipolar Geometry](https://github.com/Progern/computer-vision-hw/blob/master/cv-4-0/cv-4-3-epipolar-lines.ipynb)
